@@ -29,6 +29,7 @@
     });
     hero.addEventListener('pointerleave',()=>{targetX=targetY=0;if(!frame)frame=requestAnimationFrame(spring);});
   }
+  if(!reduce){let leftHero=false;new IntersectionObserver(entries=>{entries.forEach(entry=>{if(!entry.isIntersecting){leftHero=true;return;}if(leftHero){hero.querySelectorAll('.mh-eyebrow,.mh-line>span,.mh-last em,.mh-intro,.mh-actions,.mh-status,.mh-blob,.mh-dog-reveal,.mh-cat,.mh-seal,.mh-book,.mh-boop').forEach(el=>{el.getAnimations().forEach(a=>{if(a.effect?.getTiming().iterations!==Infinity){a.cancel();a.play();}})});leftHero=false;}})},{threshold:.1}).observe(hero);}
   let boops = 0;
   $('.mh-dog').addEventListener('click', e => {
     $('.mh-boop').textContent = `Уже ${++boops} ${boops===1?'поглаживание':boops<5?'поглаживания':'поглаживаний'}! ♡`;
@@ -63,7 +64,7 @@
       const p=packages[key];if(!p)return;
       const name=p.name.replaceAll('Check-up','Проверка здоровья').replaceAll('check-up','проверка здоровья');
       const saving=/^\d/.test(p.saving)?`<span>Выгода ${txt(p.saving)}</span>`:'';
-      result.innerHTML=`<article class="mf-offer"><div class="mf-offer-photo"><img src="assets/motion/${pet==='cat'?'hero-cat':'hero-dog'}.jpg" alt="${pet==='cat'?'Кошка':'Собака'}"><span>${txt(p.tag)}</span></div><div class="mf-offer-copy"><h3>${txt(name)}</h3><ul>${p.items.map(item=>`<li>${txt(item)}</li>`).join('')}</ul><div class="mf-price"><strong>${txt(p.price)}</strong>${saving}</div><button class="mh-btn" type="button" data-finder-book="${txt(p.name)}">Записаться на комплекс <span>↗</span></button><small>${txt(p.extra)} Не включено: ${txt(p.not)}</small></div></article>`;
+      result.innerHTML=`<article class="mf-offer"><div class="mf-offer-photo"><img src="assets/motion/${(pet==='cat'||pet==='kitten')?'hero-cat':'hero-dog'}.jpg" alt="${(pet==='cat'||pet==='kitten')?'Кошка':'Собака'}"><span>${txt(p.tag)}</span></div><div class="mf-offer-copy"><h3>${txt(name)}</h3><ul>${p.items.map(item=>`<li>${txt(item)}</li>`).join('')}</ul><div class="mf-price"><strong>${txt(p.price)}</strong>${saving}</div><button class="mh-btn" type="button" data-finder-book="${txt(p.name)}">Записаться на комплекс <span>↗</span></button><small>${txt(p.extra)} Не включено: ${txt(p.not)}</small></div></article>`;
       $('[data-finder-book]',result).addEventListener('click',e=>{
         // Keep the site's established booking handler and its package context.
         const original=$$('.package-card .js-book').find(b=>b.dataset.context===p.name);
@@ -77,8 +78,8 @@
     const group=button.parentElement;
     $$('button',group).forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
     button.classList.remove('pill-pop');void button.offsetWidth;button.classList.add('pill-pop');
-    if(button.dataset.age)age=button.dataset.age;
-    if(button.dataset.pet)pet=button.dataset.pet;
+    if(button.dataset.age){if((pet==='puppy'||pet==='kitten')&&button.dataset.age==='senior')return;age=button.dataset.age;}
+    if(button.dataset.pet){pet=button.dataset.pet;const labels={dog:'псу',cat:'коту',puppy:'щенку',kitten:'котёнку'};$('#mf-animal').textContent=labels[pet];$('[data-age=senior]',finder).disabled=(pet==='puppy'||pet==='kitten');if(pet==='puppy'||pet==='kitten'){age='young';$$('[data-age]',finder).forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.age==='young')));}}
     if(button.dataset.need)need=button.dataset.need;
     render();
   });
@@ -114,7 +115,7 @@
     track.style.transform=`translate3d(${-distance*normalized}px,0,0)`;
     const active=Math.round(normalized*5);$('.mj-count').textContent=`0${active+1} / 06`;
     $$('.mj-card').forEach((card,i)=>card.classList.toggle('is-active',i===active));
-    $('.mj-progress i').style.width=`${normalized*100}%`;
+    $('.mj-progress i').style.width=`${normalized*100}%`;$$('.mj-marks span').forEach((mark,i)=>mark.classList.toggle('active',i<=active));
     const colors=['#fff0d3','#eadfe8','#dceee3','#ffe0cf','#e5def1','#f8e9bd'];
     journey.style.backgroundColor=colors[active];journey.style.transition='background-color .7s';
     const statement=$('.ma-statement');
@@ -155,7 +156,7 @@
     const tabs=$$('[role=tab]',doctors),strip=document.createElement('div');strip.className='motion-team-strip';strip.setAttribute('aria-label','Выберите специалиста');
     tabs.forEach((tab,i)=>{
       const button=document.createElement('button');button.type='button';button.className='motion-team-person';button.setAttribute('aria-expanded',String(i===0));button.setAttribute('aria-controls',tab.getAttribute('aria-controls'));
-      button.innerHTML=`<img src="${$('img',tab).getAttribute('src')}" alt=""><span>${$('strong',tab).innerHTML}<small>${$('small',tab).textContent}</small></span>`;
+      const profile=$(`#doctor-profile-${i}`,doctors);const facts=profile?$$('.doctor-facts li',profile).map(li=>li.textContent).slice(0,4):[];button.innerHTML=`<img src="${$('img',tab).getAttribute('src')}" alt=""><span>${$('strong',tab).innerHTML}<small>${$('small',tab).textContent}<br><br>${facts.map(txt).join('<br>')}</small></span>`;
       button.addEventListener('click',()=>{tabs[i].click();$$('button',strip).forEach((b,j)=>b.setAttribute('aria-expanded',String(i===j)));});strip.append(button);
     });
     $('.doctor-index',doctors).before(strip);doctors.classList.add('motion-team-ready');
